@@ -1,5 +1,5 @@
 #pragma once
-
+#include <cstddef>
 #include <glbinding/gl/gl.h>
 #include <glm/glm.hpp>               
 #include <glm/vec3.hpp>              
@@ -10,6 +10,8 @@ class Model
 {
 public:
     void load(const char* path);
+
+	void load(float* vertices, size_t verticeSize, unsigned int* elements, size_t elementSize);
     
     ~Model();
     

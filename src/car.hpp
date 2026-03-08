@@ -1,11 +1,17 @@
 #pragma once
-
 #include <glbinding/gl/gl.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>  
 #include <glm/gtc/type_ptr.hpp>           
-
 #include "model.hpp"
+
+
+// -- tp2
+// TODO: À ajouter dans votre classe actuelle.
+
+class EdgeEffect;
+class CelShading;
+class UniformBuffer;
 
 class Car
 {   
@@ -16,21 +22,22 @@ public:
     
     void update(float deltaTime);
     
-    void draw(glm::mat4& projView);
+    void draw(glm::mat4& projView, glm::mat4& view);
+
+    void drawWindows(glm::mat4& projView, glm::mat4& view);
 
     void setColorMod(const glm::vec3& color);
     
 private:
-    
-    void drawFrame(glm::mat4& projView, glm::mat4 carModel);
+    void drawFrame(glm::mat4& projView, glm::mat4 carModel, glm::mat4& view);
 
-    void drawWheel(glm::mat4& projView, glm::mat4 wheelModel, bool isFrontWheel);
-    void drawWheels(glm::mat4& projView, glm::mat4 carModel);
+    void drawWheel(glm::mat4& projView, glm::mat4 wheelModel, bool isFrontWheel, glm::mat4& view);
+    void drawWheels(glm::mat4& projView, glm::mat4 carModel, glm::mat4& view);
 
-    void drawBlinker(glm::mat4& projView, glm::mat4 headlightModel, bool isLeftHeadlight);
-    void drawLight(glm::mat4& projView, glm::mat4 headlightModel, bool isFrontHeadlight);    
-    void drawHeadlight(glm::mat4& projView, glm::mat4 headlightModel, bool isFrontHeadlight, bool isLeftHeadlight);
-    void drawHeadlights(glm::mat4& projView, glm::mat4 frameModel);
+    void drawBlinker(glm::mat4& projView, glm::mat4 headlightModel, bool isLeftHeadlight, glm::mat4& view);
+    void drawLight(glm::mat4& projView, glm::mat4 headlightModel, bool isFrontHeadlight, glm::mat4& view);
+    void drawHeadlight(glm::mat4& projView, glm::mat4 headlightModel, bool isFrontHeadlight, bool isLeftHeadlight, glm::mat4& view);
+    void drawHeadlights(glm::mat4& projView, glm::mat4 frameModel, glm::mat4& view);
 
     glm::vec3 lastColorMod_;
     
@@ -39,6 +46,7 @@ private:
     Model wheel_;
     Model blinker_;
     Model light_;
+    Model windows[6];
     
 public:
     glm::vec3 position;
@@ -54,6 +62,12 @@ public:
     
     bool isBlinkerOn;
     float blinkerTimer;
+
+    glm::mat4 carModel{ 1.0f };
+
+    EdgeEffect* edgeEffectShader{ nullptr };
+    CelShading* celShadingShader{ nullptr };
+    UniformBuffer* material{ nullptr };
     
     GLuint colorModUniformLocation{0};
     GLuint mvpUniformLocation{0};
