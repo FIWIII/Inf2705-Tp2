@@ -128,9 +128,6 @@ void Car::update(float deltaTime)
 
 void Car::draw(glm::mat4& projView, glm::mat4& view)
 {
-    // TODO TP2/TP3 :
-    // Ajouter l'effet de contour avec stencil pour le châssis et les roues.
-
     drawFrame(projView, carModel, view);
 
     // Restaurer le matériel par défaut après le dessin des phares/clignotants
@@ -192,7 +189,7 @@ void Car::drawWindows(glm::mat4& projView, glm::mat4& view)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_CULL_FACE);
-
+    celShadingShader->use();
     glActiveTexture(GL_TEXTURE0);
     carWindowTexture->use();
 
@@ -214,11 +211,7 @@ void Car::drawFrame(glm::mat4& projView, glm::mat4 carModel, glm::mat4& view)
 {
     glm::mat4 frameModel = glm::translate(carModel, glm::vec3(0.0f, 0.25f, 0.0f));
 
-    celShadingShader->use();
-    glm::mat4 mvp = projView * frameModel;
-    celShadingShader->setMatrices(mvp, view, frameModel);
-
-    frame_.draw();
+    drawOutlinedModel(frame_, projView, view, frameModel);
 
     drawHeadlights(projView, frameModel, view);
 }
@@ -243,11 +236,36 @@ void Car::drawWheel(glm::mat4& projView, glm::mat4 wheelModel, bool isFrontWheel
     wheelModel = glm::rotate(wheelModel, wheelsRollAngle, glm::vec3(0.0f, 0.0f, 1.0f));
     wheelModel = glm::translate(wheelModel, glm::vec3(0.0f, 0.0f, -originOffset));
 
-    celShadingShader->use();
-    glm::mat4 mvp = projView * wheelModel;
-    celShadingShader->setMatrices(mvp, view, wheelModel);
+    drawOutlinedModel(wheel_, projView, view, wheelModel);
+}
 
-    wheel_.draw();
+void Car::drawOutlinedModel(const Model& model, glm::mat4& projView, glm::mat4& view, glm::mat4 modelMatrix)
+{
+    glEnable(GL_STENCIL_TEST);
+    glStencilMask(0xFF);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+    celShadingShader->use();
+    glm::mat4 mvp = projView * modelMatrix;
+    celShadingShader->setMatrices(mvp, view, modelMatrix);
+    model.draw();
+
+    glStencilMask(0x00);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+    glDisable(GL_CULL_FACE);
+    edgeEffectShader->use();
+    glUniformMatrix4fv(edgeEffectShader->mvpULoc, 1, GL_FALSE, glm::value_ptr(mvp));
+    model.draw();
+    glEnable(GL_CULL_FACE);
+
+    glStencilMask(0xFF);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glDisable(GL_STENCIL_TEST);
+
+    celShadingShader->use();
 }
 
 void Car::drawWheels(glm::mat4& projView, glm::mat4 carModel, glm::mat4& view)
@@ -268,20 +286,69 @@ void Car::drawWheels(glm::mat4& projView, glm::mat4 carModel, glm::mat4& view)
         drawWheel(projView, wheelModel, isFrontWheel, isLeftWheel, view);
     }
 }
-
+//
+//void Car::drawBlinker(glm::mat4& projView, glm::mat4 headlightModel, bool isLeftHeadlight, glm::mat4& view)
+//{
+//    // Positionner le clignotant
+//    glm::mat4 blinkerModel = glm::translate(headlightModel, glm::vec3(0.0f, 0.0f, -0.06065f));
+//    
+//    bool isBlinkerActivated = (isLeftHeadlight  && isLeftBlinkerActivated) ||
+//                              (!isLeftHeadlight && isRightBlinkerActivated);
+//
+//
+//    const glm::vec3 ON_COLOR (1.0f, 0.7f , 0.3f );
+//    const glm::vec3 OFF_COLOR(0.5f, 0.35f, 0.15f);
+//
+//    // TODO: À ajouter dans votre méthode. À compléter pour la partie 3.
+//    Material blinkerMat =
+//    {
+//        {0.0f, 0.0f, 0.0f, 0.0f},
+//        {OFF_COLOR, 0.0f},
+//        {OFF_COLOR, 0.0f},
+//        {OFF_COLOR},
+//        10.0f
+//    };
+//    
+//    if (isBlinkerOn && isBlinkerActivated)
+//    {
+//        blinkerMat.emission = glm::vec4(ON_COLOR, 0.0f);
+//    }
+//
+//    material->updateData(&blinkerMat, 0, sizeof(Material));
+//
+//    celShadingShader->use();
+//    glm::mat4 mvp = projView * blinkerModel;
+//    celShadingShader->setMatrices(mvp, view, blinkerModel);
+//
+//    glActiveTexture(GL_TEXTURE0);
+//    if (lightTexture)
+//        lightTexture->use();
+//    //glDisable(GL_DEPTH_TEST);
+//
+//    glDisable(GL_CULL_FACE);
+//    blinker_.draw();
+//    glEnable(GL_CULL_FACE);
+//    //glEnable(GL_DEPTH_TEST);
+//    glDepthMask(GL_TRUE);
+//
+//   
+//
+//    //if (isBlinkerOn && isBlinkerActivated)
+//    //    TODO: Modifier le matériel pour qu'il ait l'air d'émettre de la lumière.
+//    //    ... = glm::vec4(ON_COLOR, 0.0f);y
+//    // TODO: Envoyer le matériel au shader. Partie 3.
+//
+//}
 void Car::drawBlinker(glm::mat4& projView, glm::mat4 headlightModel, bool isLeftHeadlight, glm::mat4& view)
 {
-    // Positionner le clignotant
-    glm::mat4 blinkerModel = glm::translate(headlightModel, glm::vec3(0.0f, 0.0f, -0.06065f));
-    
-    bool isBlinkerActivated = (isLeftHeadlight  && isLeftBlinkerActivated) ||
-                              (!isLeftHeadlight && isRightBlinkerActivated);
+    glm::mat4 blinkerModel = glm::translate(headlightModel, glm::vec3(-0.05f, 0.0f, -0.06065f));
 
+    bool isBlinkerActivated = (isLeftHeadlight && isLeftBlinkerActivated) ||
+        (!isLeftHeadlight && isRightBlinkerActivated);
 
-    const glm::vec3 ON_COLOR (1.0f, 0.7f , 0.3f );
+    const glm::vec3 ON_COLOR(1.0f, 0.7f, 0.3f);
     const glm::vec3 OFF_COLOR(0.5f, 0.35f, 0.15f);
 
-    // TODO: À ajouter dans votre méthode. À compléter pour la partie 3.
     Material blinkerMat =
     {
         {0.0f, 0.0f, 0.0f, 0.0f},
@@ -290,11 +357,9 @@ void Car::drawBlinker(glm::mat4& projView, glm::mat4 headlightModel, bool isLeft
         {OFF_COLOR},
         10.0f
     };
-    
+
     if (isBlinkerOn && isBlinkerActivated)
-    {
         blinkerMat.emission = glm::vec4(ON_COLOR, 0.0f);
-    }
 
     material->updateData(&blinkerMat, 0, sizeof(Material));
 
@@ -305,72 +370,127 @@ void Car::drawBlinker(glm::mat4& projView, glm::mat4 headlightModel, bool isLeft
     glActiveTexture(GL_TEXTURE0);
     if (lightTexture)
         lightTexture->use();
-    glDisable(GL_DEPTH_TEST);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
     glDisable(GL_CULL_FACE);
+
     blinker_.draw();
+
     glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-
-   
-
-    //if (isBlinkerOn && isBlinkerActivated)
-    //    TODO: Modifier le matériel pour qu'il ait l'air d'émettre de la lumière.
-    //    ... = glm::vec4(ON_COLOR, 0.0f);y
-    // TODO: Envoyer le matériel au shader. Partie 3.
-
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
 }
 
+//
+//void Car::drawLight(glm::mat4& projView, glm::mat4 headlightModel, bool isFrontHeadlight, glm::mat4& view)
+//{
+//    glm::mat4 lightModel = glm::translate(headlightModel, glm::vec3(0.0f, 0.0f, 0.029f));
+//
+//    const glm::vec3 FRONT_ON_COLOR(1.0f, 1.0f, 1.0f);
+//    const glm::vec3 FRONT_OFF_COLOR(0.5f, 0.5f, 0.5f);
+//    const glm::vec3 REAR_ON_COLOR(1.0f, 0.1f, 0.1f);
+//    const glm::vec3 REAR_OFF_COLOR(0.5f, 0.1f, 0.1f);
+//
+//    // TODO: À ajouter dans votre méthode. À compléter pour la partie 3.
+//    Material lightFrontMat =
+//    {
+//        {0.0f, 0.0f, 0.0f, 0.0f},
+//        {FRONT_OFF_COLOR, 0.0f},
+//        {FRONT_OFF_COLOR, 0.0f},
+//        {FRONT_OFF_COLOR},
+//        10.0f
+//    };
+//
+//    Material lightRearMat =
+//    {
+//        {0.0f, 0.0f, 0.0f, 0.0f},
+//        {REAR_OFF_COLOR, 0.0f},
+//        {REAR_OFF_COLOR, 0.0f},
+//        {REAR_OFF_COLOR},
+//        10.0f
+//    };
+//
+//    if (isFrontHeadlight)
+//    {
+//        if (isHeadlightOn)
+//        {
+//            // TODO: Modifier le matériel pour qu'il ait l'air d'émettre de la lumière.
+//            lightFrontMat.emission = glm::vec4(FRONT_ON_COLOR, 0.0f);
+//        }
+//
+//        // TODO: Envoyer le matériel au shader. Partie 3.
+//        material->updateData(&lightFrontMat, 0, sizeof(Material));
+//    }
+//    else
+//    {
+//        if (isBraking)
+//        {
+//            // TODO: Modifier le matériel pour qu'il ait l'air d'émettre de la lumière.
+//            lightRearMat.emission = glm::vec4(REAR_ON_COLOR, 0.0f);
+//        }
+//
+//        // TODO: Envoyer le matériel au shader. Partie 3.
+//    material->updateData(&lightRearMat, 0, sizeof(Material));
+//    }
+//
+//    celShadingShader->use();
+//    glm::mat4 mvp = projView * lightModel;
+//    celShadingShader->setMatrices(mvp, view, lightModel);
+//
+//    glActiveTexture(GL_TEXTURE0);
+//    if (lightTexture)
+//        lightTexture->use();
+//    //glDisable(GL_DEPTH_TEST);
+//    glDepthMask(GL_FALSE);
+//    glDisable(GL_CULL_FACE);
+//    light_.draw();
+//    glEnable(GL_CULL_FACE);
+//    //glEnable(GL_DEPTH_TEST);
+//    glDepthMask(GL_TRUE);
+//}
 
 void Car::drawLight(glm::mat4& projView, glm::mat4 headlightModel, bool isFrontHeadlight, glm::mat4& view)
 {
-    glm::mat4 lightModel = glm::translate(headlightModel, glm::vec3(0.0f, 0.0f, 0.029f));
+    glm::vec3 offset = isFrontHeadlight
+        ? glm::vec3(-0.05f, 0.0f, 0.0f)
+        : glm::vec3(0.05f, 0.0f, 0.0f);
+
+    glm::mat4 lightModel = glm::translate(headlightModel, offset);
 
     const glm::vec3 FRONT_ON_COLOR(1.0f, 1.0f, 1.0f);
     const glm::vec3 FRONT_OFF_COLOR(0.5f, 0.5f, 0.5f);
     const glm::vec3 REAR_ON_COLOR(1.0f, 0.1f, 0.1f);
     const glm::vec3 REAR_OFF_COLOR(0.5f, 0.1f, 0.1f);
 
-    // TODO: À ajouter dans votre méthode. À compléter pour la partie 3.
-    Material lightFrontMat =
+    Material lightMat =
     {
         {0.0f, 0.0f, 0.0f, 0.0f},
-        {FRONT_OFF_COLOR, 0.0f},
-        {FRONT_OFF_COLOR, 0.0f},
-        {FRONT_OFF_COLOR},
-        10.0f
-    };
-
-    Material lightRearMat =
-    {
         {0.0f, 0.0f, 0.0f, 0.0f},
-        {REAR_OFF_COLOR, 0.0f},
-        {REAR_OFF_COLOR, 0.0f},
-        {REAR_OFF_COLOR},
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f},
         10.0f
     };
 
     if (isFrontHeadlight)
     {
+        lightMat.ambient = glm::vec4(FRONT_OFF_COLOR, 0.0f);
+        lightMat.diffuse = glm::vec4(FRONT_OFF_COLOR, 0.0f);
+        lightMat.specular = FRONT_OFF_COLOR;
         if (isHeadlightOn)
-        {
-            // TODO: Modifier le matériel pour qu'il ait l'air d'émettre de la lumière.
-            lightFrontMat.emission = glm::vec4(FRONT_ON_COLOR, 0.0f);
-        }
-
-        // TODO: Envoyer le matériel au shader. Partie 3.
-        material->updateData(&lightFrontMat, 0, sizeof(Material));
+            lightMat.emission = glm::vec4(FRONT_ON_COLOR, 0.0f);
     }
     else
     {
+        lightMat.ambient = glm::vec4(REAR_OFF_COLOR, 0.0f);
+        lightMat.diffuse = glm::vec4(REAR_OFF_COLOR, 0.0f);
+        lightMat.specular = REAR_OFF_COLOR;
         if (isBraking)
-        {
-            // TODO: Modifier le matériel pour qu'il ait l'air d'émettre de la lumière.
-            lightRearMat.emission = glm::vec4(REAR_ON_COLOR, 0.0f);
-        }
-
-        // TODO: Envoyer le matériel au shader. Partie 3.
-    material->updateData(&lightRearMat, 0, sizeof(Material));
+            lightMat.emission = glm::vec4(REAR_ON_COLOR, 0.0f);
     }
+
+    material->updateData(&lightMat, 0, sizeof(Material));
 
     celShadingShader->use();
     glm::mat4 mvp = projView * lightModel;
@@ -379,11 +499,17 @@ void Car::drawLight(glm::mat4& projView, glm::mat4 headlightModel, bool isFrontH
     glActiveTexture(GL_TEXTURE0);
     if (lightTexture)
         lightTexture->use();
-    glDisable(GL_DEPTH_TEST);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
     glDisable(GL_CULL_FACE);
+
     light_.draw();
+
     glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
 }
 
 void Car::drawHeadlight(glm::mat4& projView, glm::mat4 headlightModel, bool isFrontHeadlight, bool isLeftHeadlight, glm::mat4& view)

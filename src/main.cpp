@@ -454,9 +454,40 @@ struct App : public OpenGLApplication
     // modelMatrix sans le '&' car il est copié.
     void drawModel(const Model& model, glm::mat4& projView, glm::mat4& view, glm::mat4 modelMatrix)
     {
+        celShadingShader_.use();   // AJOUTER ÇA
         glm::mat4 mvp = projView * modelMatrix;
         celShadingShader_.setMatrices(mvp, view, modelMatrix); // Envoie les 3 matrices à CelShading (Partie 3)
         model.draw();
+    }
+
+    void drawOutlinedModel(const Model& model, glm::mat4& projView, glm::mat4& view, glm::mat4 modelMatrix)
+    {
+        // Passage normal : dessine + écrit dans stencil
+        glEnable(GL_STENCIL_TEST);
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+        celShadingShader_.use();
+        glm::mat4 mvp = projView * modelMatrix;
+        celShadingShader_.setMatrices(mvp, view, modelMatrix);
+        model.draw();
+
+        // Passage contour : dessine seulement hors de la zone déjà écrite
+        glStencilMask(0x00);
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+        glDisable(GL_CULL_FACE);
+        edgeEffectShader_.use();
+        glUniformMatrix4fv(edgeEffectShader_.mvpULoc, 1, GL_FALSE, glm::value_ptr(mvp));
+        model.draw();
+        glEnable(GL_CULL_FACE);
+
+        // Restore
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glDisable(GL_STENCIL_TEST);
     }
 
     // TODO: À modifier, ajouter les textures, et l'effet de contour.
@@ -472,11 +503,11 @@ struct App : public OpenGLApplication
 
             // TODO: Bind textures et faire appel à drawModel(...) pour streetlightLight_ et streetlight_
             streetlightLightTexture_.use();
-            drawModel(streetlightLight_, projView, view, streetlightModelMatrices_[i]);
+            drawOutlinedModel(streetlightLight_, projView, view, streetlightModelMatrices_[i]);
 
             setMaterial(streetlightMat);
             streetlightTexture_.use();
-            drawModel(streetlight_, projView, view, streetlightModelMatrices_[i]);
+            drawOutlinedModel(streetlight_, projView, view, streetlightModelMatrices_[i]);
         }
     }
 
@@ -487,7 +518,7 @@ struct App : public OpenGLApplication
         for (unsigned int i = 0; i < N_TREES; i++) {
             // TODO: Assigner textures
             treeTexture_.use();
-            drawModel(tree_, projView, view, treeModelMatrices_[i]);
+            drawOutlinedModel(tree_, projView, view, treeModelMatrices_[i]);
         }
         glEnable(GL_CULL_FACE);
     }

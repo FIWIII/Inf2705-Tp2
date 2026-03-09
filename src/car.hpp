@@ -30,6 +30,7 @@ public:
     void setColorMod(const glm::vec3& color);
     
 private:
+    void drawOutlinedModel(const Model& model, glm::mat4& projView, glm::mat4& view, glm::mat4 modelMatrix);
     void drawFrame(glm::mat4& projView, glm::mat4 carModel, glm::mat4& view);
 
     void drawWheel(glm::mat4& projView, glm::mat4 wheelModel, bool isFrontWheel, bool isLeftWheel, glm::mat4& view);
