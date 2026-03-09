@@ -167,6 +167,9 @@ struct App : public OpenGLApplication
         car_.edgeEffectShader = &edgeEffectShader_;
         car_.celShadingShader = &celShadingShader_;
         car_.material = &material_;
+        car_.carTexture = &carTexture_;
+        car_.carWindowTexture = &carWindowTexture_;
+        car_.lightTexture = &streetlightLightTexture_;
 
 
         // TODO: Chargement des textures, ainsi que la configuration de leurs paramètres.
@@ -591,7 +594,6 @@ struct App : public OpenGLApplication
             lightsData_.spotLights[N_STREETLIGHTS + 1].diffuse = glm::vec4(glm::vec3(1.0), 0.0f);
             lightsData_.spotLights[N_STREETLIGHTS + 1].specular = glm::vec4(glm::vec3(0.4), 0.0f);
 
-            // Utiliser car_.carModel pour calculer la nouvelle position et orientation de la lumière.
             lightsData_.spotLights[N_STREETLIGHTS].position = car_.carModel * glm::vec4(-1.6, 0.64, -0.45, 1.0f);
             lightsData_.spotLights[N_STREETLIGHTS].direction = glm::mat3(car_.carModel) * glm::vec3(-10, -1, 0);
 
@@ -619,7 +621,6 @@ struct App : public OpenGLApplication
             lightsData_.spotLights[N_STREETLIGHTS + 3].diffuse = glm::vec4(0.9, 0.1, 0.1, 0.0f);
             lightsData_.spotLights[N_STREETLIGHTS + 3].specular = glm::vec4(0.35, 0.05, 0.05, 0.0f);
 
-            // Utiliser car_.carModel pour calculer la nouvelle position et orientation de la lumière.
             lightsData_.spotLights[N_STREETLIGHTS + 2].position = car_.carModel * glm::vec4(1.6, 0.64, -0.45, 1.0f);
             lightsData_.spotLights[N_STREETLIGHTS + 2].direction = glm::mat3(car_.carModel) * glm::vec3(10, -1, 0);
 
@@ -636,6 +637,28 @@ struct App : public OpenGLApplication
             lightsData_.spotLights[N_STREETLIGHTS + 3].diffuse = glm::vec4(0.0f);
             lightsData_.spotLights[N_STREETLIGHTS + 3].specular = glm::vec4(0.0f);
         }
+    }
+    void drawSkybox(glm::mat4& view, glm::mat4& proj)
+    {
+        glDepthFunc(GL_LEQUAL);
+        glDisable(GL_CULL_FACE);
+
+        skyShader_.use();
+
+        glm::mat4 viewNoTranslation = glm::mat4(glm::mat3(view));
+        glm::mat4 mvp = proj * viewNoTranslation;
+        glUniformMatrix4fv(skyShader_.mvpULoc, 1, GL_FALSE, glm::value_ptr(mvp));
+
+        glActiveTexture(GL_TEXTURE0);
+        if (isDay_)
+            skyboxTexture_.use();
+        else
+            skyboxNightTexture_.use();
+
+        skybox_.draw();
+
+        glEnable(GL_CULL_FACE);
+        glDepthFunc(GL_LESS);
     }
 
     // TODO: À ajouter. Pas de modification.
@@ -673,7 +696,6 @@ struct App : public OpenGLApplication
             updateCarOnTrack(deltaTime_);
         }
 
-        // 2. Compute inner details (wheels, speed decay) AND calculate the carModel matrix
         car_.update(deltaTime_);
 
         updateCarLight();
@@ -684,12 +706,11 @@ struct App : public OpenGLApplication
         glm::mat4 proj = getPerspectiveProjectionMatrix();
         glm::mat4 projView = proj * view;
 
-        // TODO: Dessin des éléments
-        // ...
-        // Penser à votre ordre de dessin, les todos sont volontairement mélangé ici.
-        // --- ON DESSINE ---
-        // TODO (Partie 2 effect stencil): l'activation / le ciel / activer shader principal...
+        drawSkybox(view, proj);
+
         celShadingShader_.use();
+
+        glActiveTexture(GL_TEXTURE0);
 
         setMaterial(streetMat);
         drawGround(projView, view);
@@ -707,6 +728,8 @@ struct App : public OpenGLApplication
         setMaterial(windowMat);
         carWindowTexture_.use();
         car_.drawWindows(projView, view);
+
+        glDisable(GL_BLEND);
 
     }
 
@@ -810,7 +833,7 @@ struct App : public OpenGLApplication
         {
             d -= SEGMENT_LENGTH;
             car_.position = glm::vec3(ROAD_HALF_LENGTH, 0.0f, ROAD_HALF_LENGTH - d);
-            car_.orientation.y = glm::radians(90.0f);
+            car_.orientation.y = glm::radians(-90.0f);
         }
         else if (d < 3.0f * SEGMENT_LENGTH)
         {
@@ -822,7 +845,7 @@ struct App : public OpenGLApplication
         {
             d -= 3.0f * SEGMENT_LENGTH;
             car_.position = glm::vec3(-ROAD_HALF_LENGTH, 0.0f, -ROAD_HALF_LENGTH + d);
-            car_.orientation.y = glm::radians(-90.0f);
+            car_.orientation.y = glm::radians(90.0f);
         }
     }
     

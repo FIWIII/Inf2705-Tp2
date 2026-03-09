@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>  
 #include <glm/gtc/type_ptr.hpp>           
 #include "model.hpp"
+#include <textures.hpp>
 
 
 // -- tp2
@@ -31,7 +32,7 @@ public:
 private:
     void drawFrame(glm::mat4& projView, glm::mat4 carModel, glm::mat4& view);
 
-    void drawWheel(glm::mat4& projView, glm::mat4 wheelModel, bool isFrontWheel, glm::mat4& view);
+    void drawWheel(glm::mat4& projView, glm::mat4 wheelModel, bool isFrontWheel, bool isLeftWheel, glm::mat4& view);
     void drawWheels(glm::mat4& projView, glm::mat4 carModel, glm::mat4& view);
 
     void drawBlinker(glm::mat4& projView, glm::mat4 headlightModel, bool isLeftHeadlight, glm::mat4& view);
@@ -62,6 +63,10 @@ public:
     
     bool isBlinkerOn;
     float blinkerTimer;
+
+    Texture2D* carTexture = nullptr;
+    Texture2D* carWindowTexture = nullptr;
+    Texture2D* lightTexture = nullptr;
 
     glm::mat4 carModel{ 1.0f };
 
