@@ -8,7 +8,6 @@
 #include "shaders.hpp"
 #include "uniform_buffer.hpp"
 
-// À ajouter
 struct Material
 {
     glm::vec4 emission; // vec3, but padded
@@ -52,7 +51,6 @@ void Car::loadModels()
     blinker_.load("../models/blinker.ply");
     light_.load("../models/light.ply");
 
-    // À ajouter, l'ordre est à considérer
     const char* WINDOW_MODEL_PATHES[] =
     {
         "../models/window.f.ply",
@@ -121,17 +119,11 @@ void Car::update(float deltaTime)
     carModel = glm::rotate(carModel, orientation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
-// TODO: Revoir vos méthodes de dessin. Elles seront à modifier pour la partie 2 et 3.
-//       Partie 2: Ajouter le calcul de stencil pour le chassi et les roues pour avoir
-//                 le contour de la voiture.
-
 
 void Car::draw(glm::mat4& projView, glm::mat4& view)
 {
     drawFrame(projView, carModel, view);
 
-    // Restaurer le matériel par défaut après le dessin des phares/clignotants
-    // pour éviter que leur matériel émissif ne s'applique aux roues.
     Material defaultCarMat =
     {
         {0.0f, 0.0f, 0.0f, 0.0f},
@@ -161,23 +153,9 @@ void Car::drawWindows(glm::mat4& projView, glm::mat4& view)
         glm::vec3(0.643, 0.756, -0.508)
     };
 
-    // TODO: À ajouter et compléter.
-    //       Dessiner les vitres de la voiture. Celles-ci ont une texture transparente,
-    //       il est donc nécessaire d'activer le mélange des couleurs (GL_BLEND).
-    //       De plus, vous devez dessiner les fenêtres du plus loin vers le plus proche
-    //       pour éviter les problèmes de mélange.
-    //       Utiliser un map avec la distance en clef pour trier les fenêtres (les maps trient
-    //       à l'insertion).
-    //       Les fenêtres doivent être visibles des deux sens.
-    //       Il est important de restaurer l'état du contexte qui a été modifié à la fin de la méthode.
-
     glm::mat4 carBase = glm::translate(glm::mat4(1.0f), position);
     carBase = glm::rotate(carBase, orientation.y, glm::vec3(0.0f, 1.0f, 0.0f));
     carBase = glm::translate(carBase, glm::vec3(0.0f, 0.25f, 0.0f));
-
-
-    // Les fenêtres sont par rapport au chassi, à considérer dans votre matrice
-    // model = glm::translate(model, glm::vec3(0.0f, 0.25f, 0.0f));
 
     std::map<float, unsigned int> sorted;
     for (unsigned int i = 0; i < 6; i++)
@@ -193,10 +171,8 @@ void Car::drawWindows(glm::mat4& projView, glm::mat4& view)
     glActiveTexture(GL_TEXTURE0);
     carWindowTexture->use();
 
-    // TODO: Itération à l'inverse (de la plus grande distance jusqu'à la plus petit)
     for (std::map<float, unsigned int>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
     {
-        // TODO: Dessin des fenêtres
         glm::mat4 mvp = projView * carBase;
         celShadingShader->setMatrices(mvp, view, carBase);
         windows[it->second].draw();
@@ -281,64 +257,12 @@ void Car::drawWheels(glm::mat4& projView, glm::mat4 carModel, glm::mat4& view)
     for (int i = 0; i < 4; ++i)
     {
         glm::mat4 wheelModel = glm::translate(carModel, WHEEL_POSITIONS[i]);
-        bool isFrontWheel = (i < 2);  // Les 2 premières sont les roues avant
+        bool isFrontWheel = (i < 2);  
         bool isLeftWheel = (WHEEL_POSITIONS[i].z > 0.0f);
         drawWheel(projView, wheelModel, isFrontWheel, isLeftWheel, view);
     }
 }
-//
-//void Car::drawBlinker(glm::mat4& projView, glm::mat4 headlightModel, bool isLeftHeadlight, glm::mat4& view)
-//{
-//    // Positionner le clignotant
-//    glm::mat4 blinkerModel = glm::translate(headlightModel, glm::vec3(0.0f, 0.0f, -0.06065f));
-//    
-//    bool isBlinkerActivated = (isLeftHeadlight  && isLeftBlinkerActivated) ||
-//                              (!isLeftHeadlight && isRightBlinkerActivated);
-//
-//
-//    const glm::vec3 ON_COLOR (1.0f, 0.7f , 0.3f );
-//    const glm::vec3 OFF_COLOR(0.5f, 0.35f, 0.15f);
-//
-//    // TODO: À ajouter dans votre méthode. À compléter pour la partie 3.
-//    Material blinkerMat =
-//    {
-//        {0.0f, 0.0f, 0.0f, 0.0f},
-//        {OFF_COLOR, 0.0f},
-//        {OFF_COLOR, 0.0f},
-//        {OFF_COLOR},
-//        10.0f
-//    };
-//    
-//    if (isBlinkerOn && isBlinkerActivated)
-//    {
-//        blinkerMat.emission = glm::vec4(ON_COLOR, 0.0f);
-//    }
-//
-//    material->updateData(&blinkerMat, 0, sizeof(Material));
-//
-//    celShadingShader->use();
-//    glm::mat4 mvp = projView * blinkerModel;
-//    celShadingShader->setMatrices(mvp, view, blinkerModel);
-//
-//    glActiveTexture(GL_TEXTURE0);
-//    if (lightTexture)
-//        lightTexture->use();
-//    //glDisable(GL_DEPTH_TEST);
-//
-//    glDisable(GL_CULL_FACE);
-//    blinker_.draw();
-//    glEnable(GL_CULL_FACE);
-//    //glEnable(GL_DEPTH_TEST);
-//    glDepthMask(GL_TRUE);
-//
-//   
-//
-//    //if (isBlinkerOn && isBlinkerActivated)
-//    //    TODO: Modifier le matériel pour qu'il ait l'air d'émettre de la lumière.
-//    //    ... = glm::vec4(ON_COLOR, 0.0f);y
-//    // TODO: Envoyer le matériel au shader. Partie 3.
-//
-//}
+
 void Car::drawBlinker(glm::mat4& projView, glm::mat4 headlightModel, bool isLeftHeadlight, glm::mat4& view)
 {
     glm::mat4 blinkerModel = glm::translate(headlightModel, glm::vec3(-0.05f, 0.0f, -0.06065f));
@@ -383,73 +307,7 @@ void Car::drawBlinker(glm::mat4& projView, glm::mat4 headlightModel, bool isLeft
     glDisable(GL_BLEND);
 }
 
-//
-//void Car::drawLight(glm::mat4& projView, glm::mat4 headlightModel, bool isFrontHeadlight, glm::mat4& view)
-//{
-//    glm::mat4 lightModel = glm::translate(headlightModel, glm::vec3(0.0f, 0.0f, 0.029f));
-//
-//    const glm::vec3 FRONT_ON_COLOR(1.0f, 1.0f, 1.0f);
-//    const glm::vec3 FRONT_OFF_COLOR(0.5f, 0.5f, 0.5f);
-//    const glm::vec3 REAR_ON_COLOR(1.0f, 0.1f, 0.1f);
-//    const glm::vec3 REAR_OFF_COLOR(0.5f, 0.1f, 0.1f);
-//
-//    // TODO: À ajouter dans votre méthode. À compléter pour la partie 3.
-//    Material lightFrontMat =
-//    {
-//        {0.0f, 0.0f, 0.0f, 0.0f},
-//        {FRONT_OFF_COLOR, 0.0f},
-//        {FRONT_OFF_COLOR, 0.0f},
-//        {FRONT_OFF_COLOR},
-//        10.0f
-//    };
-//
-//    Material lightRearMat =
-//    {
-//        {0.0f, 0.0f, 0.0f, 0.0f},
-//        {REAR_OFF_COLOR, 0.0f},
-//        {REAR_OFF_COLOR, 0.0f},
-//        {REAR_OFF_COLOR},
-//        10.0f
-//    };
-//
-//    if (isFrontHeadlight)
-//    {
-//        if (isHeadlightOn)
-//        {
-//            // TODO: Modifier le matériel pour qu'il ait l'air d'émettre de la lumière.
-//            lightFrontMat.emission = glm::vec4(FRONT_ON_COLOR, 0.0f);
-//        }
-//
-//        // TODO: Envoyer le matériel au shader. Partie 3.
-//        material->updateData(&lightFrontMat, 0, sizeof(Material));
-//    }
-//    else
-//    {
-//        if (isBraking)
-//        {
-//            // TODO: Modifier le matériel pour qu'il ait l'air d'émettre de la lumière.
-//            lightRearMat.emission = glm::vec4(REAR_ON_COLOR, 0.0f);
-//        }
-//
-//        // TODO: Envoyer le matériel au shader. Partie 3.
-//    material->updateData(&lightRearMat, 0, sizeof(Material));
-//    }
-//
-//    celShadingShader->use();
-//    glm::mat4 mvp = projView * lightModel;
-//    celShadingShader->setMatrices(mvp, view, lightModel);
-//
-//    glActiveTexture(GL_TEXTURE0);
-//    if (lightTexture)
-//        lightTexture->use();
-//    //glDisable(GL_DEPTH_TEST);
-//    glDepthMask(GL_FALSE);
-//    glDisable(GL_CULL_FACE);
-//    light_.draw();
-//    glEnable(GL_CULL_FACE);
-//    //glEnable(GL_DEPTH_TEST);
-//    glDepthMask(GL_TRUE);
-//}
+
 
 void Car::drawLight(glm::mat4& projView, glm::mat4 headlightModel, bool isFrontHeadlight, glm::mat4& view)
 {
@@ -514,7 +372,7 @@ void Car::drawLight(glm::mat4& projView, glm::mat4 headlightModel, bool isFrontH
 
 void Car::drawHeadlight(glm::mat4& projView, glm::mat4 headlightModel, bool isFrontHeadlight, bool isLeftHeadlight, glm::mat4& view)
 {
-    // Rotation de 5 degrés pour les phares avant
+ 
     if (isFrontHeadlight)
     {
         headlightModel = glm::rotate(headlightModel, glm::radians(5.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -539,8 +397,8 @@ void Car::drawHeadlights(glm::mat4& projView, glm::mat4 frameModel, glm::mat4& v
     for (int i = 0; i < 4; ++i)
     {
         glm::mat4 headlightModel = glm::translate(frameModel, HEADLIGHT_POSITIONS[i]);
-        bool isFrontHeadlight = (i < 2);      // Les 2 premiers sont à l'avant
-        bool isLeftHeadlight = (i % 2 == 0);  // Indices pairs = gauche
+        bool isFrontHeadlight = (i < 2);      
+        bool isLeftHeadlight = (i % 2 == 0);  
         
         drawHeadlight(projView, headlightModel, isFrontHeadlight, isLeftHeadlight, view);
     }

@@ -72,8 +72,6 @@ out vec4 FragColor;
 float computeSpot(in float openingAngle, in float exponent, in vec3 spotDir, in vec3 lightDir, in vec3 normal)
 {
     
-    // TODO: Calcul de spotlight, l'algorithme classique d'OpenGL vu en classe (voir annexe).
-
     vec3 L = normalize(lightDir);
     vec3 S = normalize(spotDir);
 
@@ -111,19 +109,10 @@ void main()
     color += dirLight.diffuse * diff * mat.diffuse * baseColor;
     color += dirLight.specular * spec * mat.specular;
 
-    // TODO: Calcul d'illumination
-    // Directional light
-    // TODO: Seulement la lumière directionnel à l'effet de cel-shading, sur la composante diffuse et spéculaire
-    // Spot light
     
     for(int i = 0; i < nSpotLights; i++)
     {
-        // TODO: Calcul des spotlights
-    
-        // Utiliser un facteur d'atténuation. On peut utiliser smoothstep avec la distance
-        // entre la surface illuminé et la source de lumière. Il devrait y avoir un effet de blending
-        // entre 7 et 10 unitées.
-        // Le facteur impacte la composante diffuse et spéculaire.
+        
         vec3 L = normalize(lightsIn.spotLightsDir[i]);
         float d = length(lightsIn.spotLightsDir[i]);
 
@@ -146,7 +135,5 @@ void main()
         color += spotLights[i].specular * sspec * mat.specular * spot * attenuation;
     }
 
-    //vec3 color = vec3(0);
-    //color += normal/2.0 + vec3(0.5); // DEBUG: Show normals
     FragColor = vec4(color, texColor.a);
 }

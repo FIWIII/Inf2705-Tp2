@@ -2,14 +2,6 @@
 
 #include <glm/glm.hpp>
 
-// Implémentation de vos shaders ici.
-// Ils doivent hérité de ShaderProgram et implémenter les méthodes virtuelles pures
-// load() et getAllUniformLocations().
-// Mémoriser les uniforms locations dans des attributs public. Vous pouvez ajouter ce que
-// vous voulez dans les classes et mieux séparer le code.
-// Voir exemple avec le shader du tp1, considérant les variables uniformes dans le shader:
-
-// Exemple, à retirer plus tard
 class TransformShader : public ShaderProgram
 {
 public:
@@ -22,12 +14,10 @@ protected:
 };
 
 
-// TODO: Compléter ou ajouter ici bas:
 
 class EdgeEffect : public ShaderProgram
 {
 public:
-    // TODO: Uniform location ou autre
     GLuint mvpULoc;
 
 protected:
@@ -39,7 +29,6 @@ protected:
 class Sky : public ShaderProgram
 {
 public:
-    // TODO: Uniform location ou autre
     GLuint mvpULoc;
     GLuint textureSamplerULoc;
 

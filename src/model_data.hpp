@@ -1,10 +1,5 @@
 #pragma once
 
-// TODO: Compléter les coordonnées de texture.
-//       On veut que la texture du sol se répète 5 fois sur chaque côté.
-//       Pour la route, on aura une répétition de 2.
-//       Pour les coins, aucune répétition n'est nécessaire.
-
 float ground[] =
 {
     // Position           // Texture coordinates

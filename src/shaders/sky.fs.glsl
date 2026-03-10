@@ -8,6 +8,5 @@ out vec4 FragColor;
 
 void main()
 {
-    // TODO: Skybox
     FragColor = texture(textureSampler, texCoords);
 }

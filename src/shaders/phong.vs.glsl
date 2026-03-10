@@ -73,14 +73,7 @@ layout (std140) uniform LightingBlock
 
 void main()
 {
-    // Attribs
     
-    // TODO: Écriture des attributs de sortie
-    //       Si la normale est nul, lui donner une valeur qui pointe vers le haut.
-
-    // Lights
-
-    // TODO: Écriture des propriétés de lumières en sortie    
     vec4 viewPos4 = modelView * vec4(position, 1.0);
     vec3 viewPos = viewPos4.xyz;
 

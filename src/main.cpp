@@ -15,8 +15,6 @@
 #include <inf2705/OpenGLApplication.hpp>
 #include "model.hpp"
 #include "car.hpp"
-
-// TODO: À ajouter et compléter dans votre projet.
 #include "model_data.hpp"
 #include "shaders.hpp"
 #include "textures.hpp"
@@ -27,32 +25,31 @@
 using namespace gl;
 using namespace glm;
 
-// Définition des structures pour la communication avec le shader. NE PAS MODIFIER.
 
 struct Material
 {
-    glm::vec4 emission; // vec3, but padded
-    glm::vec4 ambient;  // vec3, but padded
-    glm::vec4 diffuse;  // vec3, but padded
+    glm::vec4 emission; 
+    glm::vec4 ambient;  
+    glm::vec4 diffuse; 
     glm::vec3 specular;
     GLfloat shininess;
 };
 
 struct DirectionalLight
 {
-    glm::vec4 ambient;   // vec3, but padded
-    glm::vec4 diffuse;   // vec3, but padded
-    glm::vec4 specular;  // vec3, but padded    
-    glm::vec4 direction; // vec3, but padded
+    glm::vec4 ambient;  
+    glm::vec4 diffuse;   
+    glm::vec4 specular;  
+    glm::vec4 direction; 
 };
 
 struct SpotLight
 {
-    glm::vec4 ambient;   // vec3, but padded
-    glm::vec4 diffuse;   // vec3, but padded
-    glm::vec4 specular;  // vec3, but padded
+    glm::vec4 ambient;   
+    glm::vec4 diffuse;   
+    glm::vec4 specular;  
 
-    glm::vec4 position;  // vec3, but padded
+    glm::vec4 position;
     glm::vec3 direction;
     GLfloat exponent;
     GLfloat openingAngle;
@@ -135,7 +132,7 @@ struct App : public OpenGLApplication
 	
 	void init() override
 	{
-		// Le message expliquant les touches de clavier.
+		
 		setKeybindMessage(
 			"ESC : quitter l'application." "\n"
 			"T : changer de scène." "\n"
@@ -155,15 +152,11 @@ struct App : public OpenGLApplication
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
 
-        // TODO:
-        // Création des shaders program.
-        // Fait appel à la méthode "create()".
-        // --- PARTIE 1 : CREATION DES SHADERS VIA LES NOUVELLES CLASSES ---
+        
         edgeEffectShader_.create();
         celShadingShader_.create();
         skyShader_.create();
 
-        // TODO: À ajouter.
         car_.edgeEffectShader = &edgeEffectShader_;
         car_.celShadingShader = &celShadingShader_;
         car_.material = &material_;
@@ -172,20 +165,7 @@ struct App : public OpenGLApplication
         car_.lightTexture = &streetlightLightTexture_;
 
 
-        // TODO: Chargement des textures, ainsi que la configuration de leurs paramètres.
-        //
-        //       Les textures ne se répètent pas, sauf le sol, la route (mais pas les coins), les arbres et les lampadaires.
-        //
-        //       Les textures ont un fini lisse, à l’exception des arbres, des lumières de lampadaire et
-        //       des fenêtres de la voiture.
-        //       
-        //       Le mipmap __ne doit pas__ être activé pour toutes les textures, seulement le sol et la route.
-        //
-
-        // Simplement pour réduire l'effet "négatif" du mipmap qui rend la
-        // texture flou trop près.
-        // streetTexture_.use();
-        // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1.0f);
+ 
         grassTexture_.load("../textures/grass.jpg");
         streetTexture_.load("../textures/street.jpg");
         streetcornerTexture_.load("../textures/streetcorner.jpg");
@@ -195,8 +175,6 @@ struct App : public OpenGLApplication
         streetlightTexture_.load("../textures/streetlight.jpg");
         streetlightLightTexture_.load("../textures/light.png");
         
-
-        // TODO: Chargement des deux skyboxes.
 
         const char* pathes[] = {
             "../textures/skybox/Daylight Box_Right.bmp",
@@ -248,8 +226,6 @@ struct App : public OpenGLApplication
         streetlightLightTexture_.setFiltering(GL_NEAREST);
 
         // Partie 3
-
-        // TODO: À ajouter. Aucune modification nécessaire.
         material_.allocate(&defaultMat, sizeof(Material));
         material_.setBindingIndex(0);
 
@@ -307,14 +283,12 @@ struct App : public OpenGLApplication
 	void drawFrame() override
 	{
         CHECK_GL_ERROR;
-        // TODO: Partie 2: Ajouter le nettoyage du tampon de stencil
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         ImGui::Begin("Scene Parameters");
         ImGui::Combo("Scene", &currentScene_, SCENE_NAMES, N_SCENE_NAMES);
 
-        // TODO: À ajouter.
-        // Et oui, il est désormais possible de recharger les shaders en gardant l'application ouvert.
         if (ImGui::Button("Reload Shaders"))
         {
             CHECK_GL_ERROR;
@@ -332,13 +306,6 @@ struct App : public OpenGLApplication
         case 0: sceneMain(); break;
         }
         CHECK_GL_ERROR;
-	}
-
-    // TODO: À supprimer, tout ce qui gère le chargement des shaders.
-    //       Le chargement est fait dans la classe ShaderProgram.
-
-	void onClose() override
-	{// Plus rien à détruire ici, les destroyers des classes gèrent ça de manière autonome
 	}
 
 	void onKeyPress(const sf::Event::KeyPressed& key) override
@@ -413,7 +380,7 @@ struct App : public OpenGLApplication
         cameraOrientation_.y -= cameraMouvementY * deltaTime_;
         cameraOrientation_.x -= cameraMouvementX * deltaTime_;
 
-        // Keyboard input
+
         glm::vec3 positionOffset = glm::vec3(0.0);
         const float SPEED = 10.f;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
@@ -445,24 +412,20 @@ struct App : public OpenGLApplication
         grass_.load(ground, sizeof(ground), planeElements, sizeof(planeElements));
         street_.load(street, sizeof(street), planeElements, sizeof(planeElements));
         streetcorner_.load(streetcorner, sizeof(streetcorner), planeElements, sizeof(planeElements));
-        // TODO: Ajouter le chargement du sol et de la route avec la nouvelle méthode load
-        //       des modèles. Voir "model_data.hpp".
+      
     }
     
     
-    // NOUVELLE VERSION DE drawModel - Reçoit mainenant la View.
-    // modelMatrix sans le '&' car il est copié.
     void drawModel(const Model& model, glm::mat4& projView, glm::mat4& view, glm::mat4 modelMatrix)
     {
-        celShadingShader_.use();   // AJOUTER ÇA
+        celShadingShader_.use();   
         glm::mat4 mvp = projView * modelMatrix;
-        celShadingShader_.setMatrices(mvp, view, modelMatrix); // Envoie les 3 matrices à CelShading (Partie 3)
+        celShadingShader_.setMatrices(mvp, view, modelMatrix); 
         model.draw();
     }
 
     void drawOutlinedModel(const Model& model, glm::mat4& projView, glm::mat4& view, glm::mat4 modelMatrix)
     {
-        // Passage normal : dessine + écrit dans stencil
         glEnable(GL_STENCIL_TEST);
         glStencilMask(0xFF);
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
@@ -473,7 +436,6 @@ struct App : public OpenGLApplication
         celShadingShader_.setMatrices(mvp, view, modelMatrix);
         model.draw();
 
-        // Passage contour : dessine seulement hors de la zone déjà écrite
         glStencilMask(0x00);
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
         glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
@@ -484,15 +446,11 @@ struct App : public OpenGLApplication
         model.draw();
         glEnable(GL_CULL_FACE);
 
-        // Restore
         glStencilMask(0xFF);
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glDisable(GL_STENCIL_TEST);
     }
 
-    // TODO: À modifier, ajouter les textures, et l'effet de contour.
-    //       De plus, le modèle a été séparé en deux (pour la partie 3), adapter
-    //       votre code pour faire le dessin des deux parties.
     void drawStreetlights(glm::mat4& projView, glm::mat4& view)
     {
       
@@ -501,7 +459,6 @@ struct App : public OpenGLApplication
             if (!isDay_) setMaterial(streetlightLightMat);
             else setMaterial(streetlightMat);
 
-            // TODO: Bind textures et faire appel à drawModel(...) pour streetlightLight_ et streetlight_
             streetlightLightTexture_.use();
             drawOutlinedModel(streetlightLight_, projView, view, streetlightModelMatrices_[i]);
 
@@ -511,12 +468,10 @@ struct App : public OpenGLApplication
         }
     }
 
-    // TODO: À modifier, ajouter les textures, et l'effet de contour.
     void drawTree(glm::mat4& projView, glm::mat4& view)
     {
         glDisable(GL_CULL_FACE);
         for (unsigned int i = 0; i < N_TREES; i++) {
-            // TODO: Assigner textures
             treeTexture_.use();
             drawOutlinedModel(tree_, projView, view, treeModelMatrices_[i]);
         }
@@ -536,7 +491,6 @@ struct App : public OpenGLApplication
         setMaterial(grassMat);
         grassTexture_.use();
         drawModel(grass_, projView, view, groundModelMatrice_);
-        // TODO: Dessin du sol. 
     }
 
     glm::mat4 getViewMatrix()
@@ -550,10 +504,6 @@ struct App : public OpenGLApplication
 
     glm::mat4 getPerspectiveProjectionMatrix()      
     {       
-        // TODO: Calculer la matrice de projection.
-        //
-        //       Celle-ci aura un fov de 70 degrés, un near à 0.1 et un far à 300.
-        //       
         
         float fov = glm::radians(70.0f);  
         float aspect = getWindowAspect();  
@@ -562,7 +512,7 @@ struct App : public OpenGLApplication
         return glm::perspective(fov, aspect, nearPlane, farPlane);
     }
 
-    // TODO: À ajouter. Pas de modification.
+    
     void setLightingUniform()
     {
         celShadingShader_.use();
@@ -572,7 +522,7 @@ struct App : public OpenGLApplication
         glUniform3f(celShadingShader_.globalAmbientULoc, ambientIntensity, ambientIntensity, ambientIntensity);
     }
 
-    // TODO: À ajouter. Pas de modification.
+    
     void toggleSun()
     {
         if (isDay_)
@@ -589,7 +539,6 @@ struct App : public OpenGLApplication
         }
     }
 
-    // TODO: À ajouter. Pas de modification.
     void toggleStreetlight()
     {
         if (isDay_)
@@ -612,7 +561,6 @@ struct App : public OpenGLApplication
         }
     }
 
-    // TODO: À ajouter.
     void updateCarLight()
     {
         if (car_.isHeadlightOn)
@@ -692,15 +640,11 @@ struct App : public OpenGLApplication
         glDepthFunc(GL_LESS);
     }
 
-    // TODO: À ajouter. Pas de modification.
     void setMaterial(Material& mat)
     {
-        // Ça vous donne une idée de comment utiliser les ubo dans car.cpp.
         material_.updateData(&mat, 0, sizeof(Material));
     }
-    // TODO: À ajouter et modifier.
-    //       Ajouter les textures, les skyboxes, les fenêtres de la voiture,
-    //       les effets de contour, etc.
+   
     void sceneMain()
     {
         ImGui::Begin("Scene Parameters");
@@ -764,7 +708,6 @@ struct App : public OpenGLApplication
 
     }
 
-    // Méthode pour le calcul des matrices initiales des arbres et des lampadaires.
     void initStaticMatrices()
     {
         const float ROAD_HALF_LENGTH = 15.0f;
@@ -795,10 +738,6 @@ struct App : public OpenGLApplication
             glm::vec3 toCenter = glm::normalize(glm::vec3(0.0f) - positions[i]);
             float rotation = std::atan2(-toCenter.x, -toCenter.z) + glm::radians(90.0f);
             streetlightModelMatrices_[i] = glm::rotate(model, rotation, glm::vec3(0.0f, 1.0f, 0.0f));
-            //jajoute du tp2  :
-             // ...
-
-            // TODO: À ajouter. C'est pour avoir la position de la lumière du lampadaire pour la partie 3.
             streetlightLightPositions[i] = glm::vec3(streetlightModelMatrices_[i] * glm::vec4(-2.77, 5.2, 0.0, 1.0));
         }
 
@@ -900,7 +839,7 @@ private:
 
     struct {
         DirectionalLight dirLight;
-        SpotLight spotLights[16];
+        SpotLight spotLights[12];
     } lightsData_;
 
 

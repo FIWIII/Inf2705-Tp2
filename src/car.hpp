@@ -7,9 +7,6 @@
 #include <textures.hpp>
 
 
-// -- tp2
-// TODO: À ajouter dans votre classe actuelle.
-
 class EdgeEffect;
 class CelShading;
 class UniformBuffer;
